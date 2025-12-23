@@ -1,5 +1,4 @@
-# ![pokeball](image.png) Pokedex Data Pipeline (ETL)
-
+# <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Pok%C3%A9_Ball_icon.svg" width="40" align="center" /> Pokedex Data Pipeline
 A robust data engineering pipeline that fetches, cleans, and normalizes Pokémon data from the PokéAPI.
 This script doesn't just download raw data; it transforms it into an "Application Ready" format for Machine Learning and App Development. It pre-calculates type matchups (weaknesses/resistances), creates placeholders for missing data, and generates both JSON and CSV outputs.
 
@@ -37,7 +36,7 @@ pip install requests
 Run the main script to generate the JSON database:
 
 ```Bash
-python API_File.py
+python api.py
 ```
 Note: By default, the script takes about 10-15 minutes to process all 1025 Pokémon due to API rate limiting we set.
 3. Convert to CSV (Optional)
@@ -50,7 +49,7 @@ python json_to_csv.py
 Want different data? Here is how you can tweak the pipeline for your specific needs.
 
 1. Change the range (Testing)
-If you only want the first 151 Pokémon (Gen 1), open API_File.py and change the limit at the bottom:
+If you only want the first 151 Pokémon (Gen 1), open api.py and change the limit at the bottom:
 
 ```Python
 # api.py
@@ -71,7 +70,7 @@ entry = {
 }
 ```
 
-### 2. Add More Stats (Non-Exhaustive List)
+### Add More Stats (Non-Exhaustive List)
 The PokéAPI provides extensive data. While this pipeline fetches the fields I need, you can easily modify the script to include advanced game mechanics.
 
 Here are some popular fields you might want to add:
@@ -85,7 +84,7 @@ Here are some popular fields you might want to add:
 | **Egg Groups** | Species Data | `species_data['egg_groups']` | List of breeding compatibilities. |
 
 **Example Implementation:**
-To add **Base Experience** and **Catch Rate**, modify the `fetch_all_pokemon` loop in `API_File.py`:
+To add **Base Experience** and **Catch Rate**, modify the `fetch_all_pokemon` loop in `api.py`:
 
 ```python
 # 1. Get the data
@@ -100,7 +99,7 @@ entry = {
     "capture_rate": catch_rate,   # <--- New Field
     # ... rest of the data
 }
-
+```
 ## Project Structure
 
 ```Text
