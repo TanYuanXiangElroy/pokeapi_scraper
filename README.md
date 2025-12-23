@@ -19,7 +19,7 @@ You need Python installed. It is recommended to use a virtual environment.
 
 ```Bash
 # Clone the repo
-git clone https://github.com/YOUR_USERNAME/pokedex-data-pipeline.git
+git clone https://github.com/TanYuanXiangElroy/pokeapi_scraper.git
 cd pokedex-data-pipeline
 
 # Create virtual environment (Optional but recommended)
@@ -113,5 +113,5 @@ entry = {
 ```
 
 ## Acknowledgements
-Data sourced from the open-source PokéAPI.
-Inspired by the "Pidexter" project by BigRig Creates.
+- Data sourced from the open-source [PokéAPI](https://pokeapi.co/docs/v2#google_vignette).
+- Inspired by the "Pidexter" project by BigRig Creates.
