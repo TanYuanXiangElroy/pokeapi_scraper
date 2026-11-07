@@ -1,95 +1,71 @@
 import json
 import csv
+import sys
+import glob
 
-def convert_to_csv():
-    # 1. Load the JSON data
+def flatten_dict(d, parent_key='', sep='_'):
+    items = []
+    for k, v in d.items():
+        new_key = f"{parent_key}{sep}{k}" if parent_key else k
+        if isinstance(v, dict):
+            items.extend(flatten_dict(v, new_key, sep=sep).items())
+        elif isinstance(v, list):
+            # If the list is all strings or numbers, we join it.
+            if all(isinstance(i, (str, int, float)) for i in v):
+                items.append((new_key, ", ".join(map(str, v))))
+            else:
+                # For complex objects (like TCG attacks), convert to string representation
+                items.append((new_key, json.dumps(v)))
+        else:
+            items.append((new_key, v))
+    return dict(items)
+
+def convert_to_csv(json_filename, csv_filename):
     try:
-        with open('complete_pokedex.json', 'r') as f:
+        with open(json_filename, 'r') as f:
             data = json.load(f)
     except FileNotFoundError:
-        print("Error: complete_pokedex.json not found!")
+        print(f"Error: {json_filename} not found!")
         return
 
-    # 2. Open a new CSV file
-    with open('pokemon_gen9.csv', 'w', newline='', encoding='utf-8') as f:
-        writer = csv.writer(f)
+    if not data:
+        print("Error: JSON file is empty!")
+        return
 
-        # 3. Create the Headers (The top row)
-        # We list the basic columns, then manually add the stats and damage types
-        headers = [
-            "id", "name", "category", "generation", "is_legendary", "is_mythical",
-            "types", "height", "weight", "abilities", "habitat", "evolves_from", 
-            "description", 
-            # Flattened Stats
-            "hp", "attack", "defense", "special_attack", "special_defense", "speed",
-            # Flattened Damage Taken
-            "against_normal", "against_fire", "against_water", "against_electric", "against_grass", 
-            "against_ice", "against_fighting", "against_poison", "against_ground", "against_flying", 
-            "against_psychic", "against_bug", "against_rock", "against_ghost", "against_dragon", 
-            "against_steel", "against_dark", "against_fairy",
-            # Media
-            "cry_url", "sprite_url", "shiny_sprite_url"
-        ]
-        writer.writerow(headers)
+    flattened_data = [flatten_dict(item) for item in data]
 
-        # 4. Loop through Pokemon and extract data
-        for p in data:
-            # Flatten Lists: Convert ['Fire', 'Flying'] to "Fire, Flying"
-            types_str = ", ".join(p['types'])
-            abilities_str = ", ".join(p['abilities'])
+    # Collect all unique keys across all items to use as headers
+    headers = set()
+    for item in flattened_data:
+        headers.update(item.keys())
+
+    # Sort headers so ID and Name appear first, if they exist
+    headers = sorted(list(headers))
+    if 'name' in headers:
+        headers.remove('name')
+        headers.insert(0, 'name')
+    if 'id' in headers:
+        headers.remove('id')
+        headers.insert(0, 'id')
+
+    with open(csv_filename, 'w', newline='', encoding='utf-8') as f:
+        writer = csv.DictWriter(f, fieldnames=headers)
+        writer.writeheader()
         
-            
-            row = [
-                p['id'],
-                p['name'],
-                p['category'],
-                p['generation'],
-                p['is_legendary'], 
-                p['is_mythical'],
-                types_str,
-                p['height'], 
-                p['weight'], 
-                abilities_str,
-                p['habitat'],
-                p['evolves_from'],
-                p['description'],
-                
-                # Stats
-                p['stats']['hp'],
-                p['stats']['attack'],
-                p['stats']['defense'],
-                p['stats']['special_attack'],
-                p['stats']['special_defense'],
-                p['stats']['speed'],
-                
-                # Damage Taken (18 Types)
-                p['damage_taken']['normal'],
-                p['damage_taken']['fire'],
-                p['damage_taken']['water'],
-                p['damage_taken']['electric'],
-                p['damage_taken']['grass'],
-                p['damage_taken']['ice'],
-                p['damage_taken']['fighting'],
-                p['damage_taken']['poison'],
-                p['damage_taken']['ground'],
-                p['damage_taken']['flying'],
-                p['damage_taken']['psychic'],
-                p['damage_taken']['bug'],
-                p['damage_taken']['rock'],
-                p['damage_taken']['ghost'],
-                p['damage_taken']['dragon'],
-                p['damage_taken']['steel'],
-                p['damage_taken']['dark'],
-                p['damage_taken']['fairy'],
-                
-                p['cry_url'],
-                p['sprite_url'],
-                p['shiny_sprite_url']
-            ]
-            
-            writer.writerow(row)
+        for item in flattened_data:
+            writer.writerow(item)
 
-    print("Success! Converted to pokemon_gen9.csv")
+    print(f"Success! Converted {json_filename} to {csv_filename}")
 
 if __name__ == "__main__":
-    convert_to_csv()
+    if len(sys.argv) == 3:
+        convert_to_csv(sys.argv[1], sys.argv[2])
+    else:
+        # Default behavior: Find all JSON files and convert them automatically
+        json_files = glob.glob('*pokedex*.json')
+        if not json_files:
+            print("No JSON pokedex files found to convert.")
+        else:
+            for json_file in json_files:
+                csv_file = json_file.replace('.json', '.csv')
+                convert_to_csv(json_file, csv_file)
