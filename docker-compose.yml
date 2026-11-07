@@ -1,0 +1,10 @@
+version: '3.8'
+
+services:
+  scraper:
+    build: .
+    volumes:
+      # Map the container's working directory to a local data directory to easily persist configs and files
+      - ./data:/app/data
+    # Command moves generated files to the mounted 'data' folder
+    command: sh -c "python api.py && python json_to_csv.py && mv *.json *.csv data/ 2>/dev/null || true"
